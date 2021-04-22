@@ -13,7 +13,7 @@ function render(vdom,container) {
  * 
  * 
 */
-function createDom(vdom) {
+export function createDom(vdom) {
     //TODO 处理vdom是数字 或者字符串的情况
     if(typeof vdom === 'string' || typeof vdom === 'number') {
         return document.createTextNode(vdom)
@@ -22,7 +22,12 @@ function createDom(vdom) {
     let {type,props} = vdom
     let dom
     if(typeof type === 'function') { // 函数组件
-       return mountFunctionComponent(vdom)
+        if(type.isReactComponent) {
+            return mountClassComponent(vdom)
+        }else {
+            return mountFunctionComponent(vdom)
+        }
+     
     }else { //原生组件
         dom  = document.createElement(type)
     }
@@ -55,13 +60,25 @@ function mountFunctionComponent(vdom){
     return createDom(renderVdom)
 
 }
+function  mountClassComponent(vdom) {
+    //解构类的定义和类的属性对象
+    let {type,props} = vdom
+    // 创建类的实例
+    let classIntance = new type(props)
+    // 调用实例的render方法返回要渲染的虚拟dom对象
+    let renderVdom = classIntance.render()
+    //根据虚拟dom对象创建真实dom对象
+    let dom = createDom(renderVdom)
+    // 为以后类组件的更新，把真实dom挂载到类的实例上
+    classIntance.dom = dom
+    return dom
+}
 /**
  * 使用虚拟dom的属性更新刚创建出来的真实DOM属性
  * @param dom 真实dom
  * @param newProps 新属性对象
  */
 function updateProps(dom,newProps) {
-    console.log(dom)
     for(let key in newProps) {
         if(key === 'children')  continue  // 单独处理不再这里处理
         if(key === 'style') {
@@ -69,6 +86,9 @@ function updateProps(dom,newProps) {
             for(let attr in styleObj) {
                 dom.style[attr] = styleObj[attr]
             }
+        }else if(key.startsWith('on')) {
+            // 给真实dom加属性
+            dom[key.toLocaleLowerCase()] = newProps[key]
         }else { // 在js中 dom.className= 'title'
             
             dom[key] = newProps[key]
