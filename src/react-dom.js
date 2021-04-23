@@ -8,6 +8,7 @@ import { addEvent } from "./event"
 function render(vdom,container) {
     const dom = createDom(vdom)
     container.appendChild(dom)
+    dom.componentDidMount && dom.componentDidMount()
 }
 /**
  * @param vdom 虚拟dom
@@ -67,10 +68,16 @@ function  mountClassComponent(vdom) {
     let {type,props} = vdom
     // 创建类的实例
     let classIntance = new type(props)
+    if(classIntance.componentWillMount) {
+       classIntance.componentWillMount()
+    }
     // 调用实例的render方法返回要渲染的虚拟dom对象
     let renderVdom = classIntance.render()
     //根据虚拟dom对象创建真实dom对象
     let dom = createDom(renderVdom)
+    if(classIntance.componentDidMount) {
+        dom.componentDidMount = classIntance.componentDidMount.bind()
+    }
     // 为以后类组件的更新，把真实dom挂载到类的实例上
     classIntance.dom = dom
     return dom
