@@ -13,6 +13,9 @@ class Counter extends React.Component {
     }
     handleClick = () => {
       this.setState({number:this.state.number+1})
+      console.log(this.state.number)
+      this.setState({number:this.state.number+1})
+      console.log(this.state.number)
     }
     render() {
       return (
@@ -24,4 +27,4 @@ class Counter extends React.Component {
       )
     }
 }
-ReactDOM.render(<Counter name="计数器"/ >,document.getElementById('root'))
+ReactDOM.render(<Counter name="计数器"/>,document.getElementById('root'))

@@ -1,3 +1,5 @@
+import { addEvent } from "./event"
+
 /**
  * @param {*} vdom 要渲染的vdom
  * @param container  要把虚拟dom转换成真实的dom并插入到容器中
@@ -78,7 +80,7 @@ function  mountClassComponent(vdom) {
  * @param dom 真实dom
  * @param newProps 新属性对象
  */
-function updateProps(dom,newProps) {
+function updateProps(dom, newProps) {
     for(let key in newProps) {
         if(key === 'children')  continue  // 单独处理不再这里处理
         if(key === 'style') {
@@ -88,7 +90,7 @@ function updateProps(dom,newProps) {
             }
         }else if(key.startsWith('on')) {
             // 给真实dom加属性
-            dom[key.toLocaleLowerCase()] = newProps[key]
+            addEvent(dom, key.toLocaleLowerCase(), newProps[key])
         }else { // 在js中 dom.className= 'title'
             
             dom[key] = newProps[key]
