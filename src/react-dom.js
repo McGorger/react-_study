@@ -58,28 +58,35 @@ export function createDom(vdom) {
  * @param {*} vdom 
  */
 function mountFunctionComponent(vdom){
-    let {type:FunctionComponent,props} = vdom
-    let renderVdom = FunctionComponent(props)
-    return createDom(renderVdom)
+    let {type,props} = vdom
+    let oldRenderVdom = type(props)
+    vdom.oldRenderVdom = oldRenderVdom
+    return createDom(oldRenderVdom)
 
 }
 function  mountClassComponent(vdom) {
+    console.log(vdom)
     //解构类的定义和类的属性对象
     let {type,props} = vdom
     // 创建类的实例
     let classIntance = new type(props)
+    vdom.classIntance = classIntance
     if(classIntance.componentWillMount) {
        classIntance.componentWillMount()
     }
     // 调用实例的render方法返回要渲染的虚拟dom对象
-    let renderVdom = classIntance.render()
+    let oldRenderVdom = classIntance.render()
+    classIntance.oldRenderVdom = oldRenderVdom
+    //把这个将要渲染的虚拟dom添加到类的实例上
+    vdom.oldRenderVdom = oldRenderVdom
     //根据虚拟dom对象创建真实dom对象
-    let dom = createDom(renderVdom)
+    let dom = createDom(oldRenderVdom)
     if(classIntance.componentDidMount) {
-        dom.componentDidMount = classIntance.componentDidMount.bind()
+        dom.componentDidMount = classIntance.componentDidMount.bind(classIntance)
     }
     // 为以后类组件的更新，把真实dom挂载到类的实例上
-    classIntance.dom = dom
+    // 当根据一个vdom创建出来一个真实dom之后,真实dom挂载到vdom,dom属性上
+    // vdom.dom = dom
     return dom
 }
 /**
@@ -114,6 +121,71 @@ function reconcileChildren(childrenVdom,parentDom) {
         let childVdom = childrenVdom[i]
         render(childVdom,parentDom)
     }
+}
+/**
+ * 对当前组件进行dom-diff
+ * @param {*} parentDom 当前组件挂载父真实dom节点
+ * @param {*} oldVdom 
+ * @param {*} newVdom 
+ */
+export function compareTwoVdom(parentDom,oldVdom,newVdom,nextDom){
+    if(!oldVdom && !newVdom) {
+        return null
+    }else if(oldVdom && !newVdom) {
+        let currentDom = findDom(oldVdom) //先找到此虚拟dom对应的真实dom
+        if(currentDom)
+            parentDom.removeChild(currentDom)
+        if(oldVdom.classIntance && oldVdom.classIntance.componentWillUnMount){
+            oldVdom.classIntance.componentWillUnMount()
+        } 
+        return null
+    }else if(!oldVdom && newVdom) {
+        let newDom = createDom(newVdom)
+        if(nextDom)
+            parentDom.insertBefore(newDom,nextDom)
+        else  
+            parentDom.appendChild(newVdom)
+        return newVdom
+    }else if(oldVdom && newVdom && (oldVdom.type !== newVdom.type)) {
+        let oldDom = findDom(oldVdom.dom)
+        let newDom = createDom(newVdom)
+        parentDom.replaceChild(newDom,oldDom)
+        if(oldVdom.classIntance && oldVdom.classIntance.componentWillUnMount){
+            oldVdom.classIntance.componentWillUnMount()
+        }
+    }else {
+        updateElement(oldVdom,newVdom)
+        return newVdom
+    }
+}
+/**
+ * 
+ * @param {*} oldVdom 
+ * @param {*} newVdom 
+ */
+function updateElement(oldVdom,newVdom) {
+    if(typeof oldVdom.type === 'string'){
+        let currentDom = newVdom.dom = oldVdom.dom
+        updateProps(currentDom,oldVdom.props,newVdom.props) 
+    }
+}
+/**
+ * 
+ * @param {*} vdom 
+ */
+function findDom(vdom) {
+    let {type} = vdom
+    let dom
+    if(typeof type === 'function'){
+        if(type.isReactComponent) {
+            dom = findDom(vdom.oldRenderVdom)
+        }else {
+            dom = findDom(vdom.oldRenderVdom)
+        }
+    }else {
+        dom = vdom.dom
+    }
+    return dom
 }
 const ReactDOM = {render}
 export default ReactDOM

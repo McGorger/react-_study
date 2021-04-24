@@ -1,4 +1,4 @@
-import { createDom } from "./react-dom";
+import { compareTwoVdom } from "./react-dom";
 export let updateQueue = {
     isBatchingUpdate: false, //当前是否处于批量更新模式
     updaters: new Set(),
@@ -85,17 +85,23 @@ class Component{
         if(this.componentWillUpdate) {
             this.componentWillUpdate()
         }
-        let newVdom = this.render()
-        updateClassComponent(this,newVdom)
+        let newRenderVdom = this.render() //重新调用render方法,得到新的虚拟dom
+        // updateClassComponent(this,newVdom)
+        // 深度比较两个虚拟dom
+        let oldRenderVdom = this.oldRenderVdom
+        let oldDom =  oldRenderVdom.dom
+        let currentRenderVdom = compareTwoVdom(oldDom.parentNode,oldRenderVdom,newRenderVdom)
+        this.oldRenderVdom = currentRenderVdom
         if(this.componentDidUpdate) {
             this.componentDidUpdate()
         }
     }
 }
-function  updateClassComponent(classIntance,newVdom) {
-    let oldDom = classIntance.dom // 取出这个类组件上次渲染出来的真实dom
-    let newDom = createDom(newVdom)
-    oldDom.parentNode.replaceChild(newDom,oldDom)
-    classIntance.dom = newDom
-}
+
+// function  updateClassComponent(classIntance,newVdom) {
+//     let oldDom = classIntance.dom // 取出这个类组件上次渲染出来的真实dom
+//     let newDom = createDom(newVdom)
+//     oldDom.parentNode.replaceChild(newDom,oldDom)
+//     classIntance.dom = newDom
+// }
 export default Component
