@@ -167,6 +167,21 @@ function updateElement(oldVdom,newVdom) {
     if(typeof oldVdom.type === 'string'){
         let currentDom = newVdom.dom = oldVdom.dom
         updateProps(currentDom,oldVdom.props,newVdom.props) 
+        updateChildren(currentDom,oldVdom.props.children,newVdom.props.children)
+    }
+}
+/**
+ * 
+ * @param {*} parentDom 
+ * @param {*} oldVChildren 
+ * @param {*} newVChildren 
+ */
+function updateChildren(parentDom,oldVChildren,newVChildren) {
+    oldVChildren = Array.isArray(oldVChildren) ? oldVChildren : [oldVChildren]
+    newVChildren = Array.isArray(newVChildren) ? newVChildren : [newVChildren]
+    let maxLength = Math.max(oldVChildren.length,newVChildren.length)
+    for(let i = 0;i<maxLength;i++) {
+        compareTwoVdom(parentDom,oldVChildren[i],newVChildren[i])
     }
 }
 /**

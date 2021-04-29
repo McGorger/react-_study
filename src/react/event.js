@@ -1,4 +1,4 @@
-import { updateQueue } from './Component';
+import { updateQueue } from '../Component';
 /**
  * 给真实的DOM添加事件处理函数
  * 为什么要这么做？合成事件？为什么要做事件委托或者事件代理

@@ -1,4 +1,5 @@
 import Component from './Component' 
+import { wrapToVdom } from "./utils";
 /**
  * 
  * @param {*} type 元素的类型
@@ -9,9 +10,10 @@ import Component from './Component'
 function createElement(type,config, children) {
     let props = {...config}
     if(arguments.length > 3) {
-        children = Array.prototype.slice.call(arguments,2)
+        children = Array.prototype.slice.call(arguments,2).map(wrapToVdom) 
+    }else {
+        props.children = wrapToVdom(children)
     }
-    props.children = children
     return {
         type,
         props

@@ -1,0 +1,1 @@
+export const React_TEXT = 'REACT_TEXT'
