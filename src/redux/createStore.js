@@ -1,5 +1,4 @@
 
-
 /**
  * 
  * @param {*} reducer  处理器
@@ -13,7 +12,11 @@ function createStore(reducer,preloadedState) {
         return state
     }
     function subscribe(listener) {
-        listeners.push(listener)
+        listeners.push(listener) 
+        return () => {
+            let index = listeners.indexOf(listener)
+            listeners.splice(index,1)
+        }
     }
     /**
      * 派发action ,会返回一个取消订阅的函数
@@ -23,11 +26,10 @@ function createStore(reducer,preloadedState) {
         // 接收reducer，计算新的state
         state = reducer(state,action)
         listeners.forEach(l => l()) // 通知订阅函数执行
-        return () => {
-            let index = listeners.indexOf(listener)
-            listeners.splice(index,1)
-        }
+        return action
     }
+    //
+    dispatch({type:'@@REDUX/INIT'})
     const store = {
         getState,
         subscribe,
